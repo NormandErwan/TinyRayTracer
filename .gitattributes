@@ -1,0 +1,31 @@
+* text=auto
+
+Packages/* text eol=crlf
+
+*.asset text eol=crlf
+*.bat text eol=crlf
+*.compute text
+*.cs text
+*.csproj text eol=crlf
+.gitattributes text
+.gitignore text
+*.hlsl text
+*.json text
+*.mat text eol=crlf
+*.md text
+*.meta text eol=crlf
+*.obj text eol=crlf
+*.prefab text eol=crlf
+*.puml text
+*.renderTexture text eol=crlf
+*.sln text eol=crlf
+*.txt text
+*.unity text eol=crlf
+*.xml text
+*.yml text
+
+*.fbx binary
+*.ico binary
+*.nb binary
+*.png binary
+*.ttf binary
