@@ -1,4 +1,5 @@
-﻿using Unity.Mathematics;
+﻿using System.Collections.Generic;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -22,9 +23,17 @@ namespace NormandErwan.TinyRayTracer
         [SerializeField]
         private uint2 size = DefaultSize;
 
+        [SerializeField]
+        private List<Sphere> spheres = default;
+
         private ComputeKernel kernel;
 
         private int3 threadGroupsCount;
+
+        /// <summary>
+        /// Gets the <see cref="Sphere"/> to render.
+        /// </summary>
+        public List<Sphere> Spheres => spheres;
 
         public RenderTexture Texture { get; private set; }
 
@@ -54,6 +63,7 @@ namespace NormandErwan.TinyRayTracer
         {
             try
             {
+                kernel.Set("Spheres", Spheres);
                 kernel.Dispatch(threadGroupsCount);
             }
             finally
