@@ -2,25 +2,36 @@
 
 #pragma kernel Render
 
-/// <summary>
-/// The number of threads per group.
-/// </summary>
+// The number of threads per group.
 static const uint2 GroupThreads = uint2(32, 32);
 
-/// <summary>
-/// The texture to render.
-/// </summary>
+// The forward vector.
+static const float3 Forward = float3(0, 0, 1);
+
+// The texture to render.
 RWTexture2D<float4> Texture;
 
 // The spheres to render.
 StructuredBuffer<Sphere> Spheres;
 
+// Project a vector into an other.
+float3 Project(float3 position, float3 onVector)
+{
+    float distance = dot(onVector, position);
+    return distance * Forward;
+}
+
+// Render to the Texture.
 [numthreads(GroupThreads.x, GroupThreads.y, 1)]
 void Render(uint3 id : SV_DispatchThreadID)
 {
     float2 size;
     Texture.GetDimensions(size.x, size.y);
 
-    //Texture[id.xy] = float4(id.xy / size, 0, 1);
-    Texture[id.xy] = float4(Spheres[0].Center, 1);
+    float3 projection = Project(Forward, Spheres[0].Center);
+    float distanceToRay = distance(Spheres[0].Center, projection);
+    bool intersect = distanceToRay <= Spheres[0].Radius;
+
+    float3 pixel = intersect ? 1 : 0;
+    Texture[id.xy] = float4(pixel, 1);
 }
