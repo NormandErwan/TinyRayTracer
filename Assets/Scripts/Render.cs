@@ -7,8 +7,6 @@ namespace NormandErwan.TinyRayTracer
 {
     public sealed class Render : MonoBehaviour
     {
-        public static readonly uint2 DefaultSize = new uint2(1024, 1024);
-
         private const int TextureDepth = 0;
 
         [SerializeField]
@@ -18,10 +16,10 @@ namespace NormandErwan.TinyRayTracer
         private string kernelName = default;
 
         [SerializeField]
-        private RawImage image = default;
+        private new Camera camera = default;
 
         [SerializeField]
-        private uint2 size = DefaultSize;
+        private RawImage image = default;
 
         [SerializeField]
         private List<Sphere> spheres = default;
@@ -41,7 +39,7 @@ namespace NormandErwan.TinyRayTracer
         {
             kernel = new ComputeKernel(shader, kernelName);
 
-            Texture = new RenderTexture((int)size.x, (int)size.y, TextureDepth)
+            Texture = new RenderTexture(camera.pixelWidth, camera.pixelHeight, TextureDepth)
             {
                 enableRandomWrite = true
             };
@@ -50,13 +48,19 @@ namespace NormandErwan.TinyRayTracer
             image.texture = Texture;
             kernel.Set("Texture", Texture);
 
-            threadGroupsCount = new int3((int2)(size.xy / kernel.ThreadsCount.xy), 1);
+            var threadGroups = math.ceil(new float2(Texture.width, Texture.height) / kernel.ThreadsCount.xy);
+            threadGroupsCount = new int3((int2)threadGroups.xy, 1);
         }
 
         private void OnDestroy()
         {
             kernel.Dispose();
             Texture.Release();
+        }
+
+        private void OnValidate()
+        {
+
         }
 
         private void LateUpdate()
