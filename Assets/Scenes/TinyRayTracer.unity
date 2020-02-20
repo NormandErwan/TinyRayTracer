@@ -96,6 +96,7 @@ LightmapSettings:
     m_PVRFilteringAtrousPositionSigmaAO: 1
     m_ExportTrainingData: 0
     m_TrainingDataDestination: TrainingData
+    m_LightProbeSampleCountMultiplier: 4
   m_LightingDataAsset: {fileID: 0}
   m_UseShadowmask: 1
 --- !u!196 &4
@@ -269,8 +270,9 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 298797387}
   m_Enabled: 1
-  serializedVersion: 9
+  serializedVersion: 10
   m_Type: 1
+  m_Shape: 0
   m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
   m_Intensity: 1
   m_Range: 10
@@ -345,7 +347,6 @@ GameObject:
   m_Component:
   - component: {fileID: 387039213}
   - component: {fileID: 387039211}
-  - component: {fileID: 387039212}
   m_Layer: 0
   m_Name: Camera
   m_TagString: MainCamera
@@ -396,14 +397,6 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
---- !u!81 &387039212
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 387039210}
-  m_Enabled: 1
 --- !u!4 &387039213
 Transform:
   m_ObjectHideFlags: 0
