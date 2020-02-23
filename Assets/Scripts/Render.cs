@@ -1,10 +1,10 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace NormandErwan.TinyRayTracer
 {
+    [RequireComponent(typeof(Camera))]
     public sealed class Render : MonoBehaviour
     {
         private const int TextureDepth = 0;
@@ -16,22 +16,11 @@ namespace NormandErwan.TinyRayTracer
         private string kernelName = default;
 
         [SerializeField]
-        private new Camera camera = default;
-
-        [SerializeField]
-        private RawImage image = default;
-
-        [SerializeField]
         private List<Sphere> spheres = default;
 
+        private new Camera camera;
         private ComputeKernel kernel;
-
         private int3 threadGroupsCount;
-
-        /// <summary>
-        /// Gets the <see cref="UnityEngine.Camera"/> thats render the scene.
-        /// </summary>
-        public Camera Camera => camera;
 
         /// <summary>
         /// Gets the <see cref="Sphere"/> collection to render.
@@ -45,6 +34,7 @@ namespace NormandErwan.TinyRayTracer
 
         private void Awake()
         {
+            camera = GetComponent<Camera>();
             kernel = new ComputeKernel(shader, kernelName);
 
             SetTexture();
@@ -56,37 +46,26 @@ namespace NormandErwan.TinyRayTracer
             Texture.Release();
         }
 
-        private void LateUpdate()
+        private void OnRenderImage(RenderTexture source, RenderTexture destination)
         {
-            if (Texture.width != camera.pixelWidth || Texture.height != camera.pixelHeight)
-            {
-                SetTexture();
-            }
-
             try
             {
+                if (Texture.width != camera.pixelWidth || Texture.height != camera.pixelHeight)
+                {
+                    SetTexture();
+                }
+
                 shader.SetVector("BackgroundColor", camera.backgroundColor);
                 shader.SetFloat("OrthographicSize", camera.orthographicSize);
                 kernel.Set("Spheres", Spheres);
                 kernel.Dispatch(threadGroupsCount);
+
+                Graphics.Blit(Texture, destination);
             }
             finally
             {
                 kernel.ReleaseBuffers();
             }
-        }
-
-        /// <summary>
-        /// Calls <see cref="GL.Clear(bool, bool, Color)"/> on <see cref="Texture"/>.
-        /// </summary>
-        private void Clear()
-        {
-            var active = RenderTexture.active;
-
-            RenderTexture.active = Texture;
-            GL.Clear(clearDepth: true, clearColor: true, backgroundColor: Color.black);
-
-            RenderTexture.active = active;
         }
 
         private void SetTexture()
@@ -102,7 +81,6 @@ namespace NormandErwan.TinyRayTracer
             };
             Texture.Create();
 
-            image.texture = Texture;
             kernel.Set("Texture", Texture);
 
             var threadGroups = math.ceil(new float2(Texture.width, Texture.height) / kernel.ThreadsCount.xy);
