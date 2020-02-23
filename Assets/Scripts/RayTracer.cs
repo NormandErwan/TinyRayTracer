@@ -5,7 +5,7 @@ using UnityEngine;
 namespace NormandErwan.TinyRayTracer
 {
     [RequireComponent(typeof(Camera))]
-    public sealed class Render : MonoBehaviour
+    public sealed class RayTracer : MonoBehaviour
     {
         private const int TextureDepth = 0;
 
