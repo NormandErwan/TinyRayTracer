@@ -1,24 +1,36 @@
-﻿#include "Assets/Scripts/Sphere.compute"
+#include "Assets/Scripts/Sphere.compute"
 
 #pragma kernel Render
 
 // The number of threads per group.
 static const uint2 GroupThreads = uint2(32, 32);
 
-// The forward vector.
+// The forward vector of the camera.
 static const float3 Forward = float3(0, 0, 1);
 
-// The texture to render.
-RWTexture2D<float4> Texture;
+// The camera's background color.
+extern float4 BackgroundColor;
+
+// The camera's half size when in orthographic mode.
+extern float OrthographicSize;
 
 // The spheres to render.
-StructuredBuffer<Sphere> Spheres;
+extern StructuredBuffer<Sphere> Spheres;
 
-// Project a vector into an other.
-float3 Project(float3 position, float3 onVector)
+// The render texture of the camera.
+extern RWTexture2D<float4> Texture;
+
+// Project a vector into a ray.
+bool Project(float3 rayOrigin, float3 rayDirection, float3 position, out float3 projection)
 {
-    float distance = dot(onVector, position);
-    return distance * Forward;
+    float distance = dot(rayDirection, position);
+    if (distance < 0)
+    {
+        return false;
+    }
+
+    projection = rayOrigin + distance * rayDirection;
+    return true;
 }
 
 // Render to the Texture.
@@ -28,10 +40,16 @@ void Render(uint3 id : SV_DispatchThreadID)
     float2 size;
     Texture.GetDimensions(size.x, size.y);
 
-    float3 projection = Project(Forward, Spheres[0].Center);
-    float distanceToRay = distance(Spheres[0].Center, projection);
-    bool intersect = distanceToRay <= Spheres[0].Radius;
+    float3 pixelPosition = float3(id.xy / size.y * OrthographicSize, 0);
 
-    float3 pixel = intersect ? 1 : 0;
-    Texture[id.xy] = float4(pixel, 1);
+    float3 projection;
+    bool intersect = Project(pixelPosition, Forward, Spheres[0].Center, projection);
+    if (intersect)
+    {
+        float distanceToRay = distance(Spheres[0].Center, projection);
+        intersect = distanceToRay <= Spheres[0].Radius;
+    }
+
+    float4 pixel = intersect ? float4(1, 1, 1, 1) : BackgroundColor;
+    Texture[id.xy] = pixel;
 }

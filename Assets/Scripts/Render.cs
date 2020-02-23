@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UI;
@@ -29,27 +29,25 @@ namespace NormandErwan.TinyRayTracer
         private int3 threadGroupsCount;
 
         /// <summary>
-        /// Gets the <see cref="Sphere"/> to render.
+        /// Gets the <see cref="UnityEngine.Camera"/> thats render the scene.
+        /// </summary>
+        public Camera Camera => camera;
+
+        /// <summary>
+        /// Gets the <see cref="Sphere"/> collection to render.
         /// </summary>
         public List<Sphere> Spheres => spheres;
 
+        /// <summary>
+        /// Gets the <see cref="RenderTexture"/> result of the <see cref="Camera"/>.
+        /// </summary>
         public RenderTexture Texture { get; private set; }
 
         private void Awake()
         {
             kernel = new ComputeKernel(shader, kernelName);
 
-            Texture = new RenderTexture(camera.pixelWidth, camera.pixelHeight, TextureDepth)
-            {
-                enableRandomWrite = true
-            };
-            Texture.Create();
-
-            image.texture = Texture;
-            kernel.Set("Texture", Texture);
-
-            var threadGroups = math.ceil(new float2(Texture.width, Texture.height) / kernel.ThreadsCount.xy);
-            threadGroupsCount = new int3((int2)threadGroups.xy, 1);
+            SetTexture();
         }
 
         private void OnDestroy()
@@ -58,15 +56,17 @@ namespace NormandErwan.TinyRayTracer
             Texture.Release();
         }
 
-        private void OnValidate()
-        {
-
-        }
-
         private void LateUpdate()
         {
+            if (Texture.width != camera.pixelWidth || Texture.height != camera.pixelHeight)
+            {
+                SetTexture();
+            }
+
             try
             {
+                shader.SetVector("BackgroundColor", camera.backgroundColor);
+                shader.SetFloat("OrthographicSize", camera.orthographicSize);
                 kernel.Set("Spheres", Spheres);
                 kernel.Dispatch(threadGroupsCount);
             }
@@ -87,6 +87,26 @@ namespace NormandErwan.TinyRayTracer
             GL.Clear(clearDepth: true, clearColor: true, backgroundColor: Color.black);
 
             RenderTexture.active = active;
+        }
+
+        private void SetTexture()
+        {
+            if (Texture != null)
+            {
+                Texture.Release();
+            }
+
+            Texture = new RenderTexture(camera.pixelWidth, camera.pixelHeight, TextureDepth)
+            {
+                enableRandomWrite = true
+            };
+            Texture.Create();
+
+            image.texture = Texture;
+            kernel.Set("Texture", Texture);
+
+            var threadGroups = math.ceil(new float2(Texture.width, Texture.height) / kernel.ThreadsCount.xy);
+            threadGroupsCount = new int3((int2)threadGroups.xy, 1);
         }
     }
 }
