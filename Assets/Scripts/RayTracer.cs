@@ -62,7 +62,7 @@ namespace NormandErwan.TinyRayTracer
                     }
 
                     shader.SetVector("BackgroundColor", camera.backgroundColor);
-                    shader.SetFloat("OrthographicSize", camera.orthographicSize);
+                    shader.SetFloat("OrthographicHeight", 4 * camera.orthographicSize);
                     kernel.Set("Spheres", spheres);
                     kernel.Dispatch(threadGroupsCount);
                 }

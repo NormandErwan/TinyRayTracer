@@ -11,8 +11,8 @@ static const float3 Forward = float3(0, 0, 1);
 // The camera's background color.
 extern float4 BackgroundColor;
 
-// The camera's half size when in orthographic mode.
-extern float OrthographicSize;
+// The camera's height when in orthographic mode.
+extern float OrthographicHeight;
 
 // The spheres to render.
 extern StructuredBuffer<Sphere> Spheres;
@@ -40,7 +40,7 @@ void Render(uint3 id : SV_DispatchThreadID)
     float2 size;
     Texture.GetDimensions(size.x, size.y);
 
-    float3 pixelPosition = float3(id.xy / size.y * OrthographicSize, 0);
+    float3 pixelPosition = float3(id.xy / size.y * OrthographicHeight, 0);
 
     float3 projection;
     bool intersect = Project(pixelPosition, Forward, Spheres[0].Center, projection);
