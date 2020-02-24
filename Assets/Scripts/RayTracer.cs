@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Linq;
+using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -15,9 +16,6 @@ namespace NormandErwan.TinyRayTracer
         [SerializeField]
         private string kernelName = default;
 
-        [SerializeField]
-        private List<Sphere> spheres = default;
-
         private new Camera camera;
         private ComputeKernel kernel;
         private int3 threadGroupsCount;
@@ -25,7 +23,7 @@ namespace NormandErwan.TinyRayTracer
         /// <summary>
         /// Gets the <see cref="Sphere"/> collection to render.
         /// </summary>
-        public List<Sphere> Spheres => spheres;
+        public static List<Sphere> Spheres { get; set; }
 
         /// <summary>
         /// Gets the <see cref="RenderTexture"/> result of the <see cref="Camera"/>.
@@ -38,6 +36,11 @@ namespace NormandErwan.TinyRayTracer
             kernel = new ComputeKernel(shader, kernelName);
 
             SetTexture();
+
+            if (Spheres == null)
+            {
+                Spheres = new List<Sphere>();
+            }
         }
 
         private void OnDestroy()
@@ -48,24 +51,28 @@ namespace NormandErwan.TinyRayTracer
 
         private void OnRenderImage(RenderTexture source, RenderTexture destination)
         {
-            try
+            var spheres = Spheres.Select(sphere => sphere.ShaderData).ToArray();
+            if (spheres.Length > 0)
             {
-                if (Texture.width != camera.pixelWidth || Texture.height != camera.pixelHeight)
+                try
                 {
-                    SetTexture();
+                    if (Texture.width != camera.pixelWidth || Texture.height != camera.pixelHeight)
+                    {
+                        SetTexture();
+                    }
+
+                    shader.SetVector("BackgroundColor", camera.backgroundColor);
+                    shader.SetFloat("OrthographicSize", camera.orthographicSize);
+                    kernel.Set("Spheres", spheres);
+                    kernel.Dispatch(threadGroupsCount);
                 }
-
-                shader.SetVector("BackgroundColor", camera.backgroundColor);
-                shader.SetFloat("OrthographicSize", camera.orthographicSize);
-                kernel.Set("Spheres", Spheres);
-                kernel.Dispatch(threadGroupsCount);
-
-                Graphics.Blit(Texture, destination);
+                finally
+                {
+                    kernel.ReleaseBuffers();
+                }
             }
-            finally
-            {
-                kernel.ReleaseBuffers();
-            }
+
+            Graphics.Blit(Texture, destination);
         }
 
         private void SetTexture()
