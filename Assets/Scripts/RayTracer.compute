@@ -1,4 +1,4 @@
-#include "Assets/Scripts/Sphere.compute"
+#include "Assets/Scripts/Sphere.hlsl"
 
 #pragma kernel Render
 
