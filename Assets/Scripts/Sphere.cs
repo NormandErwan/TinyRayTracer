@@ -1,4 +1,4 @@
-﻿using Unity.Mathematics;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace NormandErwan.TinyRayTracer
@@ -13,6 +13,11 @@ namespace NormandErwan.TinyRayTracer
         private float radius = 1;
 
         /// <summary>
+        /// Gets the center position of this <see cref="Sphere"/>.
+        /// </summary>
+        public float3 Center => transform.localPosition;
+
+        /// <summary>
         /// Gets the radius of this <see cref="Sphere"/>.
         /// </summary>
         public float Radius => radius;
@@ -20,7 +25,7 @@ namespace NormandErwan.TinyRayTracer
         /// <summary>
         /// Gets the shader <see cref="Data"/> of this <see cref="Sphere"/>.
         /// </summary>
-        public Data ShaderData => new Data(transform.localPosition, Radius);
+        public Data ShaderData => new Data(this);
 
         /// <summary>
         /// Adds this <see cref="Sphere"/> to <see cref="RayTracer.Spheres"/>.
@@ -29,7 +34,6 @@ namespace NormandErwan.TinyRayTracer
         {
             RayTracer.Spheres.Add(this);
         }
-
         
         /// <summary>
         /// Removes this <see cref="Sphere"/> to <see cref="RayTracer.Spheres"/>.
@@ -64,23 +68,22 @@ namespace NormandErwan.TinyRayTracer
         public struct Data
         {
             /// <summary>
-            /// Creates a new <see cref="Sphere"/>.
+            /// Creates a new <see cref="Data"/> from a <see cref="Sphere"/>.
             /// </summary>
-            /// <param name="center">The value of <see cref="Center"/>.</param>
-            /// <param name="radius">The value of <see cref="Radius"/>.</param>
-            public Data(float3 center, float radius)
+            /// <param name="sphere">The <see cref="Sphere"/> from which extract shader data.</param>
+            public Data(Sphere sphere)
             {
-                Center = center;
-                Radius = radius;
+                Center = sphere.Center;
+                Radius = sphere.Radius;
             }
 
             /// <summary>
-            /// Gets the position of the center of this <see cref="Sphere"/>.
+            /// Gets <see cref="Sphere.Center"/>.
             /// </summary>
             public float3 Center { get; }
 
             /// <summary>
-            /// Gets the radius of this <see cref="Sphere"/>.
+            /// Gets <see cref="Sphere.Radius"/>.
             /// </summary>
             public float Radius { get; }
         }
