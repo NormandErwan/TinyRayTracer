@@ -27,6 +27,16 @@ namespace NormandErwan.TinyRayTracer
         /// </summary>
         public Data ShaderData => new Data(this);
 
+        private new Renderer renderer;
+
+        /// <summary>
+        /// Gets <see cref="Renderer"/> component.
+        /// </summary>
+        private void Awake()
+        {
+            renderer = GetComponent<Renderer>();
+        }
+
         /// <summary>
         /// Adds this <see cref="Sphere"/> to <see cref="RayTracer.Spheres"/>.
         /// </summary>
@@ -74,6 +84,7 @@ namespace NormandErwan.TinyRayTracer
             public Data(Sphere sphere)
             {
                 Center = sphere.Center;
+                Material = new Material(sphere.renderer.sharedMaterial);
                 Radius = sphere.Radius;
             }
 
@@ -81,6 +92,8 @@ namespace NormandErwan.TinyRayTracer
             /// Gets <see cref="Sphere.Center"/>.
             /// </summary>
             public float3 Center { get; }
+
+            public Material Material { get; }
 
             /// <summary>
             /// Gets <see cref="Sphere.Radius"/>.

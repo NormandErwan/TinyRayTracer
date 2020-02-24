@@ -42,14 +42,16 @@ void Render(uint3 id : SV_DispatchThreadID)
 
     float3 pixelPosition = float3(id.xy / size.y * OrthographicHeight, 0);
 
+    Sphere sphere = Spheres[0];
+
     float3 projection;
-    bool intersect = Project(pixelPosition, Forward, Spheres[0].Center, projection);
+    bool intersect = Project(pixelPosition, Forward, sphere.Center, projection);
     if (intersect)
     {
-        float distanceToRay = distance(Spheres[0].Center, projection);
-        intersect = distanceToRay <= Spheres[0].Radius;
+        float distanceToRay = distance(sphere.Center, projection);
+        intersect = distanceToRay <= sphere.Radius;
     }
 
-    float4 pixel = intersect ? float4(1, 1, 1, 1) : BackgroundColor;
+    float4 pixel = intersect ? sphere.Material.Color : BackgroundColor;
     Texture[id.xy] = pixel;
 }
