@@ -1,6 +1,9 @@
+#include "Assets/Scripts/Ray.hlsl"
 #include "Assets/Scripts/Sphere.hlsl"
 
 #pragma kernel Render
+
+#define FLT_MAX         3.402823466e+38 // Maximum representable floating-point number
 
 // The number of threads per group.
 static const uint2 GroupThreads = uint2(32, 32);
@@ -20,38 +23,35 @@ extern StructuredBuffer<Sphere> Spheres;
 // The render texture of the camera.
 extern RWTexture2D<float4> Texture;
 
-// Project a vector into a ray.
-bool Project(float3 rayOrigin, float3 rayDirection, float3 position, out float3 projection)
-{
-    float distance = dot(rayDirection, position);
-    if (distance < 0)
-    {
-        return false;
-    }
-
-    projection = rayOrigin + distance * rayDirection;
-    return true;
-}
-
 // Render to the Texture.
 [numthreads(GroupThreads.x, GroupThreads.y, 1)]
 void Render(uint3 id : SV_DispatchThreadID)
 {
     float2 size;
+    float4 pixel = BackgroundColor;
     Texture.GetDimensions(size.x, size.y);
 
-    float3 pixelPosition = float3(id.xy / size.y * OrthographicHeight, 0);
+    Ray ray;
+    ray.Origin = float3(id.xy / size.y * OrthographicHeight, 0);
+    ray.Direction = Forward;
 
-    Sphere sphere = Spheres[0];
+    uint spheresCount, spheresStride;
+    Spheres.GetDimensions(spheresCount, spheresStride);
 
-    float3 projection;
-    bool intersect = Project(pixelPosition, Forward, sphere.Center, projection);
-    if (intersect)
+    float minDistance = FLT_MAX;
+    for (uint i = 0; i < spheresCount; i++)
     {
-        float distanceToRay = distance(sphere.Center, projection);
-        intersect = distanceToRay <= sphere.Radius;
+        Sphere sphere = Spheres[i];
+
+        float distance;
+        float3 hitPoint;
+        bool intersect = Intersect(ray, sphere, distance, hitPoint);
+        if (intersect && distance < minDistance)
+        {
+            minDistance = distance;
+            pixel = sphere.Material.Color;
+        }
     }
 
-    float4 pixel = intersect ? sphere.Material.Color : BackgroundColor;
     Texture[id.xy] = pixel;
 }
