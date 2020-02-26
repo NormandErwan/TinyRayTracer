@@ -61,8 +61,7 @@ namespace NormandErwan.TinyRayTracer
                         SetTexture();
                     }
 
-                    shader.SetVector("BackgroundColor", camera.backgroundColor);
-                    shader.SetFloat("OrthographicHeight", 4 * camera.orthographicSize);
+                    kernel.Set("Cameras", new List<CameraData>() { new CameraData(camera) });
                     kernel.Set("Spheres", spheres);
                     kernel.Dispatch(threadGroupsCount);
                 }

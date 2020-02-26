@@ -1,21 +1,16 @@
+#include "Assets/Scripts/Camera.hlsl"
 #include "Assets/Scripts/Ray.hlsl"
 #include "Assets/Scripts/Sphere.hlsl"
 
 #pragma kernel Render
 
-#define FLT_MAX         3.402823466e+38 // Maximum representable floating-point number
+#define FLT_MAX 3.402823466e+38 // Maximum representable floating-point number
 
 // The number of threads per group.
 static const uint2 GroupThreads = uint2(32, 32);
 
-// The forward vector of the camera.
-static const float3 Forward = float3(0, 0, 1);
-
-// The camera's background color.
-extern float4 BackgroundColor;
-
-// The camera's height when in orthographic mode.
-extern float OrthographicHeight;
+// The camera.
+extern StructuredBuffer<Camera> Cameras;
 
 // The spheres to render.
 extern StructuredBuffer<Sphere> Spheres;
@@ -28,12 +23,15 @@ extern RWTexture2D<float4> Texture;
 void Render(uint3 id : SV_DispatchThreadID)
 {
     float2 size;
-    float4 pixel = BackgroundColor;
     Texture.GetDimensions(size.x, size.y);
 
+    Camera camera = Cameras[0];
+    float pixelToMeter = camera.OrthographicHeight / size.y;
+    float4 pixel = camera.BackgroundColor;
+
     Ray ray;
-    ray.Origin = float3(id.xy / size.y * OrthographicHeight, 0);
-    ray.Direction = Forward;
+    ray.Origin = camera.Position + float3((id.xy - 0.5 * size) * pixelToMeter, 0);
+    ray.Direction = camera.Forward;
 
     uint spheresCount, spheresStride;
     Spheres.GetDimensions(spheresCount, spheresStride);
